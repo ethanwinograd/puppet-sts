@@ -3,36 +3,37 @@
 # This module manages SpringSource Tool Suite
 #
 class sts {
-	$sts_version = "2.9.2"
-	$eclipse_release = "3.7"
-	$eclipse_version = "${eclipse_release}.2"
-	$sts_tarball = "/tmp/sts-${sts_version}.tar.gz"
+	$sts_version = "3.6.3"
+	$eclipse_release = "4.4"
+	$eclipse_version = "${eclipse_release}.1"
 	$flavor = $architecture ? {
 		"amd64" => "-x86_64",
 		default => "" 
 	}
+	$sts_tarball =  "spring-tool-suite-${sts_version}.SR1-e${eclipse_version}-linux-gtk${flavor}.tar.gz"
+	$sts_temp_path = "/tmp/${sts_tarball}"
 	$sts_install = "/opt"
-	$sts_home = "${sts_install}/springsource/sts-${sts_version}.RELEASE"
-	$sts_url = "http://download.springsource.com/release/STS/${sts_version}/dist/e${eclipse_release}/springsource-tool-suite-${sts_version}.RELEASE-e${eclipse_version}-linux-gtk${flavor}.tar.gz"
+	$sts_home = "${sts_install}/sts-bundle/sts-${sts_version}.SR1"
+	$sts_url = "http://download.springsource.com/release/STS/${sts_version}.SR1/dist/e${eclipse_release}/${sts_tarball}"
 	$sts_symlink = "${sts_install}/sts"
 	$sts_executable = "${sts_symlink}/STS"
 	
 	exec { "download-sts":
-		command => "/usr/bin/wget -O ${sts_tarball} ${sts_url}",
+		command => "/usr/bin/wget -O ${sts_temp_path} ${sts_url}",
 		require => Package["wget"],
-		creates => $sts_tarball,
+		creates => $sts_temp_path,
 		timeout => 1200,	
 	}
 	
-	file { "${sts_tarball}" :
+	file { "${sts_temp_path}" :
 		require => Exec["download-sts"],
 		ensure => file,
 	}
 	
 	exec { "install-sts" :
-		require => File["${sts_tarball}"],
+		require => File["${sts_temp_path}"],
 		cwd => $sts_install,
-		command => "/bin/tar -xa -f ${sts_tarball}",
+		command => "/bin/tar -xza -f ${sts_temp_path}",
 		creates => $sts_home,
 	}
 	
@@ -55,7 +56,7 @@ class sts {
 	
 	file { "/usr/share/applications/sts.desktop" :
 		require => File[$sts_symlink],
-		content => template('workstation/sts.desktop.erb'),
+		content => template('sts/sts.desktop.erb'),
 	}	
 
 
